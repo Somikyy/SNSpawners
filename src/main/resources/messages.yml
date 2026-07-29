@@ -1,0 +1,368 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  SNSpawners · Сообщения
+#  Автор: Somikyy · t.me/somikyy · разработка плагинов и 3D-моделей
+# ─────────────────────────────────────────────────────────────────────────────
+#
+#  КАЖДОЕ сообщение настраивается отдельно и полностью:
+#
+#    какой-то-ключ:
+#      type: CHAT          # CHAT | ACTIONBAR | TITLE | NONE — NONE отключает
+#      prefix: true        # подставлять ли общий префикс (только для CHAT)
+#      text: "..."         # строка ИЛИ список строк (многострочное сообщение)
+#      subtitle: "..."     # только для TITLE
+#      fade-in: 10         # только для TITLE, в тиках
+#      stay: 40
+#      fade-out: 10
+#      sound: "UI_BUTTON_CLICK:1.0:1.0"   # ЗВУК:громкость:высота, "" = без звука
+#
+#  Короткая форма тоже работает — просто строка вместо секции:
+#    какой-то-ключ: "&aПривет!"
+#  Это равнозначно type: CHAT, prefix: true, без звука.
+#
+#  ЦВЕТА. Поддерживается всё сразу:
+#    &a &c &l &r          — классические коды
+#    &#FF0000  #FF0000    — HEX
+#    <#FF0000>текст</#FF0000>
+#    <gradient:#FF0000:#00FF00>плавный переход</gradient>
+#    <gradient:#FF0000:#00FF00:#0000FF>сколько угодно точек</gradient>
+#
+#  Плейсхолдеры перечислены рядом с каждым сообщением.
+# ─────────────────────────────────────────────────────────────────────────────
+
+prefix: "<gradient:#00E1FF:#7B2FFF>&lSNSpawners</gradient> <#3A3A3A>»</#3A3A3A> "
+
+messages:
+
+  # ── Общие ──────────────────────────────────────────────────────────────────
+
+  no-permission:
+    type: CHAT
+    prefix: true
+    text: "<#FF5C5C>Недостаточно прав. <#7A7A7A>(%permission%)"
+    sound: "ENTITY_VILLAGER_NO:0.6:1.0"
+
+  player-not-found:
+    type: CHAT
+    prefix: true
+    text: "<#FF5C5C>Игрок <#FFFFFF>%player% <#FF5C5C>не найден."
+
+  invalid-number:
+    type: CHAT
+    prefix: true
+    text: "<#FF5C5C>«<#FFFFFF>%input%<#FF5C5C>» — это не число."
+
+  unknown-subcommand:
+    type: CHAT
+    prefix: true
+    text: "<#FF5C5C>Неизвестная подкоманда. <#7A7A7A>/snsp help"
+
+  inventory-full:
+    type: ACTIONBAR
+    text: "<#FF9A3D>Инвентарь заполнен — выдано не всё"
+    sound: "ENTITY_VILLAGER_NO:0.5:1.2"
+
+  help:
+    type: CHAT
+    prefix: false
+    text:
+      - ""
+      - " <gradient:#00E1FF:#7B2FFF>&lSNSpawners</gradient> <#3A3A3A>· виртуальные спавнеры"
+      - ""
+      - " <#7B2FFF>▸ <#B8B8B8>/snsp give <#5A5A5A><игрок> <тип> [кол-во] [стак]"
+      - " <#7B2FFF>▸ <#B8B8B8>/snsp info <#5A5A5A>— статистика и нагрузка"
+      - " <#7B2FFF>▸ <#B8B8B8>/snsp types <#5A5A5A>— список доступных типов"
+      - " <#7B2FFF>▸ <#B8B8B8>/snsp reload <#5A5A5A>— перезагрузить конфиги"
+      - ""
+
+  reload-success:
+    type: CHAT
+    prefix: true
+    text: "<#5AFF8A>Конфигурация перезагружена за <#FFFFFF>%ms%<#5AFF8A> мс."
+    sound: "ENTITY_PLAYER_LEVELUP:0.5:1.6"
+
+  reload-failed:
+    type: CHAT
+    prefix: true
+    text:
+      - "<#FF5C5C>Ошибка при перезагрузке: <#FFFFFF>%error%"
+      - "<#7A7A7A>Старая конфигурация оставлена в силе, смотри консоль."
+    sound: "ENTITY_VILLAGER_NO:0.8:0.8"
+
+
+  # ── Установка ──────────────────────────────────────────────────────────────
+
+  place-blacklisted-world:
+    type: CHAT
+    prefix: true
+    text: "<#FF5C5C>В этом мире ставить спавнеры нельзя."
+    sound: "ENTITY_VILLAGER_NO:0.6:1.0"
+
+  # %type% %stack% %added%
+  place-merged:
+    type: ACTIONBAR
+    text: "<#5AFF8A>+%added% <#B8B8B8>%type% <#5A5A5A>· <#FFD75E>×%stack%"
+    sound: "BLOCK_ANVIL_USE:0.5:1.9"
+
+  # %type% %stack%
+  place-success:
+    type: ACTIONBAR
+    text: "<#B8B8B8>%type% <#5A5A5A>установлен · <#FFD75E>×%stack%"
+
+  # %limit%
+  place-limit-reached:
+    type: CHAT
+    prefix: true
+    text: "<#FF9A3D>Достигнут лимит стака: <#FFFFFF>%limit%<#FF9A3D>. Остаток вернулся в инвентарь."
+    sound: "ENTITY_VILLAGER_NO:0.6:1.0"
+
+
+  # ── Разрушение ─────────────────────────────────────────────────────────────
+
+  break-not-owner:
+    type: CHAT
+    prefix: true
+    text: "<#FF5C5C>Спавнер принадлежит игроку <#FFFFFF>%owner%<#FF5C5C> — ломать нельзя."
+    sound: "ENTITY_VILLAGER_NO:0.6:1.0"
+
+  break-need-silk:
+    type: CHAT
+    prefix: true
+    text: "<#FF9A3D>Нужен инструмент с <#FFFFFF>Шёлковым касанием<#FF9A3D>."
+    sound: "ENTITY_VILLAGER_NO:0.6:1.0"
+
+  break-failed-chance:
+    type: CHAT
+    prefix: true
+    text: "<#FF5C5C>Спавнер рассыпался. <#7A7A7A>(шанс сохранения: %chance%%)"
+    sound: "BLOCK_GLASS_BREAK:0.8:0.8"
+
+  # %type% %amount% %left%
+  break-success:
+    type: ACTIONBAR
+    text: "<#5AFF8A>-%amount% <#B8B8B8>%type% <#5A5A5A>· осталось <#FFD75E>%left%"
+    sound: "ENTITY_ITEM_PICKUP:0.7:1.2"
+
+  # %type% %amount% — снят весь стак, блок удалён
+  break-success-whole:
+    type: ACTIONBAR
+    text: "<#5AFF8A>Снят весь стак: <#B8B8B8>%type% <#FFD75E>×%amount%"
+    sound: "ENTITY_ITEM_PICKUP:0.7:1.0"
+
+  # Склад не пуст, стак снимается целиком
+  break-storage-not-empty:
+    type: CHAT
+    prefix: true
+    text:
+      - "<#FF9A3D>На складе спавнера ещё есть предметы <#7A7A7A>(%storage% шт.)"
+      - "<#7A7A7A>Забери их из меню, иначе они пропадут. Сломай ещё раз, чтобы подтвердить."
+    sound: "ENTITY_VILLAGER_NO:0.6:1.2"
+
+
+  # ── Меню и склад ───────────────────────────────────────────────────────────
+
+  gui-not-owner:
+    type: CHAT
+    prefix: true
+    text: "<#FF5C5C>Это не твой спавнер."
+    sound: "ENTITY_VILLAGER_NO:0.6:1.0"
+
+  # %items% %types%
+  collect-success:
+    type: ACTIONBAR
+    text: "<#5AFF8A>Получено <#FFFFFF>%items% <#5AFF8A>предметов"
+    sound: "ENTITY_ITEM_PICKUP:0.7:1.2"
+
+  collect-empty:
+    type: ACTIONBAR
+    text: "<#7A7A7A>Склад пуст"
+    sound: "ENTITY_VILLAGER_NO:0.4:1.4"
+
+  # %items% %left%
+  collect-partial:
+    type: CHAT
+    prefix: true
+    text: "<#FF9A3D>Забрано <#FFFFFF>%items%<#FF9A3D>, инвентарь кончился. На складе осталось <#FFFFFF>%left%<#FF9A3D>."
+    sound: "ENTITY_VILLAGER_NO:0.5:1.2"
+
+  # %money% %items%
+  sell-success:
+    type: CHAT
+    prefix: true
+    text: "<#5AFF8A>Продано <#FFFFFF>%items% <#5AFF8A>предметов за <#FFD75E>%money%<#5AFF8A>."
+    sound: "BLOCK_NOTE_BLOCK_PLING:0.8:1.8"
+
+  sell-empty:
+    type: ACTIONBAR
+    text: "<#7A7A7A>Продавать нечего"
+    sound: "ENTITY_VILLAGER_NO:0.4:1.4"
+
+  sell-no-economy:
+    type: CHAT
+    prefix: true
+    text:
+      - "<#FF5C5C>Экономика недоступна — не найден плагин экономики."
+      - "<#7A7A7A>Нужен Vault и любой экономический плагин: EssentialsX, CMI, XConomy."
+    sound: "ENTITY_VILLAGER_NO:0.6:1.0"
+
+  # %xp%
+  xp-collected:
+    type: ACTIONBAR
+    text: "<#7BE87B>+%xp% опыта"
+    sound: "ENTITY_EXPERIENCE_ORB_PICKUP:0.6:1.2"
+
+  # %storage% %max%
+  storage-full:
+    type: CHAT
+    prefix: true
+    text: "<#FF9A3D>Склад спавнера заполнен <#FFFFFF>(%storage%/%max%)<#FF9A3D> — производство остановлено."
+    sound: "ENTITY_VILLAGER_NO:0.6:0.9"
+
+
+  # ── Улучшения ──────────────────────────────────────────────────────────────
+
+  # %level% %cost%
+  upgrade-success:
+    type: CHAT
+    prefix: true
+    text: "<#5AFF8A>Спавнер улучшен до уровня <#FFD75E>%level% <#5AFF8A>за <#FFD75E>%cost%<#5AFF8A>."
+    sound: "ENTITY_PLAYER_LEVELUP:0.7:1.4"
+
+  upgrade-max-level:
+    type: ACTIONBAR
+    text: "<#FFD75E>Максимальный уровень"
+    sound: "ENTITY_VILLAGER_NO:0.4:1.4"
+
+  # %cost% %balance% %needed%
+  upgrade-no-money:
+    type: CHAT
+    prefix: true
+    text: "<#FF5C5C>Не хватает <#FFD75E>%needed%<#FF5C5C>. Нужно <#FFFFFF>%cost%<#FF5C5C>, у тебя <#FFFFFF>%balance%<#FF5C5C>."
+    sound: "ENTITY_VILLAGER_NO:0.6:1.0"
+
+
+  # ── Автопродажа ────────────────────────────────────────────────────────────
+
+  autosell-enabled:
+    type: ACTIONBAR
+    text: "<#5AFF8A>Автопродажа включена"
+    sound: "BLOCK_NOTE_BLOCK_PLING:0.6:1.6"
+
+  autosell-disabled:
+    type: ACTIONBAR
+    text: "<#FF9A3D>Автопродажа выключена"
+    sound: "BLOCK_NOTE_BLOCK_BASS:0.6:1.0"
+
+  # %money% — сводка дохода, шлётся не чаще auto-sell.notify-cooldown
+  autosell-income:
+    type: ACTIONBAR
+    text: "<#5AFF8A>Спавнеры принесли <#FFD75E>%money%"
+    sound: ""
+
+
+  # ── Привязка контейнера ────────────────────────────────────────────────────
+
+  link-start:
+    type: CHAT
+    prefix: true
+    text:
+      - "<#00E1FF>Кликни по сундуку, бочке или шалкеру, чтобы привязать его."
+      - "<#7A7A7A>Максимальная дистанция: %distance% блоков. Присядь+клик — отмена."
+    sound: "BLOCK_NOTE_BLOCK_PLING:0.6:1.4"
+
+  # %x% %y% %z%
+  link-success:
+    type: CHAT
+    prefix: true
+    text: "<#5AFF8A>Контейнер привязан <#7A7A7A>(%x%, %y%, %z%)<#5AFF8A>. Лут пойдёт туда автоматически."
+    sound: "BLOCK_NOTE_BLOCK_PLING:0.8:1.8"
+
+  link-cancelled:
+    type: ACTIONBAR
+    text: "<#7A7A7A>Привязка отменена"
+
+  # %distance% %max%
+  link-too-far:
+    type: CHAT
+    prefix: true
+    text: "<#FF5C5C>Слишком далеко: <#FFFFFF>%distance%<#FF5C5C> блоков, максимум <#FFFFFF>%max%<#FF5C5C>."
+    sound: "ENTITY_VILLAGER_NO:0.6:1.0"
+
+  link-invalid-container:
+    type: CHAT
+    prefix: true
+    text: "<#FF5C5C>Сюда привязаться нельзя. Разрешено: <#FFFFFF>%allowed%"
+    sound: "ENTITY_VILLAGER_NO:0.6:1.0"
+
+  link-removed:
+    type: ACTIONBAR
+    text: "<#FF9A3D>Привязка контейнера снята"
+    sound: "BLOCK_NOTE_BLOCK_BASS:0.6:1.0"
+
+  link-lost:
+    type: CHAT
+    prefix: true
+    text: "<#FF9A3D>Привязанный контейнер спавнера исчез — автовыгрузка отключена."
+
+
+  # ── Команды администратора ─────────────────────────────────────────────────
+
+  # %player% %type% %amount% %stack%
+  give-sender:
+    type: CHAT
+    prefix: true
+    text: "<#5AFF8A>Выдано <#FFFFFF>%player%<#5AFF8A>: <#B8B8B8>%type% <#FFD75E>×%stack% <#5A5A5A>· %amount% шт."
+
+  # %type% %amount% %stack%
+  give-target:
+    type: CHAT
+    prefix: true
+    text: "<#5AFF8A>Ты получил <#B8B8B8>%type% <#5AFF8A>(стак <#FFD75E>%stack%<#5AFF8A>) — <#FFFFFF>%amount% шт."
+    sound: "ENTITY_PLAYER_LEVELUP:0.6:1.5"
+
+  # %type% %types%
+  give-unknown-type:
+    type: CHAT
+    prefix: true
+    text:
+      - "<#FF5C5C>Неизвестный тип: <#FFFFFF>%type%"
+      - "<#7A7A7A>Доступно: %types%"
+    sound: "ENTITY_VILLAGER_NO:0.6:1.0"
+
+  # %types% %loaded% %tracked% %stack_total% %avg_ms% %max_ms%
+  info:
+    type: CHAT
+    prefix: false
+    text:
+      - ""
+      - " <gradient:#00E1FF:#7B2FFF>&lSNSpawners</gradient> <#3A3A3A>· состояние"
+      - ""
+      - " <#5A5A5A>Типов в конфиге <#3A3A3A>· <#B8B8B8>%types%"
+      - " <#5A5A5A>Спавнеров в памяти <#3A3A3A>· <#B8B8B8>%loaded%"
+      - " <#5A5A5A>Суммарный стак <#3A3A3A>· <#FFD75E>%stack_total%"
+      - " <#5A5A5A>В очереди автовыгрузки <#3A3A3A>· <#B8B8B8>%tracked%"
+      - ""
+      - " <#5A5A5A>Время прохода <#3A3A3A>· <#5AFF8A>%avg_ms% мс <#3A3A3A>(пик <#FF9A3D>%max_ms% мс<#3A3A3A>)"
+      - " <#5A5A5A>Экономика <#3A3A3A>· <#B8B8B8>%economy%"
+      - ""
+
+  # %types%
+  types-list:
+    type: CHAT
+    prefix: true
+    text: "<#B8B8B8>Доступные типы: <#7A7A7A>%types%"
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Предмет-спавнер в инвентаре
+#  Плейсхолдеры: %type%, %stack%
+# ─────────────────────────────────────────────────────────────────────────────
+item:
+  name: "<#B8B8B8>Спавнер <#5A5A5A>· %type% <#5A5A5A>· <#FFD75E>×%stack%"
+  lore:
+    - ""
+    - " <#5A5A5A>Виртуальный спавнер <#3A3A3A>· не спавнит мобов"
+    - " <#5A5A5A>Лут копится на складе и забирается из меню"
+    - ""
+    - " <#7B2FFF>▸ <#7A7A7A>Поставь рядом с таким же — <#B8B8B8>сольются в стак"
+    - " <#7B2FFF>▸ <#7A7A7A>ПКМ по установленному — <#B8B8B8>открыть меню"
+    - ""

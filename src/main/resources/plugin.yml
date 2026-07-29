@@ -1,0 +1,46 @@
+name: SNSpawners
+version: '${project.version}'
+main: ru.snplugins.snspawners.SNSpawners
+api-version: '1.21'
+folia-supported: false
+description: 'Виртуальные стакающиеся спавнеры: ноль сущностей, ноль лагов.'
+website: 'https://t.me/somikyy'
+authors: [ Somikyy ]
+softdepend: [ Vault ]
+
+commands:
+  snspawners:
+    description: Основная команда SNSpawners
+    aliases: [ snsp, spawners, снспавнеры ]
+    usage: /snsp help
+
+permissions:
+  snspawners.use:
+    description: Доступ к меню собственных спавнеров
+    default: true
+  snspawners.place:
+    description: Разрешение ставить спавнеры
+    default: true
+  snspawners.admin:
+    description: Полный доступ (выдача, reload, обход защиты)
+    default: op
+    children:
+      snspawners.use: true
+      snspawners.place: true
+      snspawners.bypass: true
+      snspawners.command.give: true
+      snspawners.command.reload: true
+      snspawners.command.info: true
+  snspawners.bypass:
+    description: Обход проверки владельца спавнера
+    default: op
+  snspawners.command.give:
+    default: op
+  snspawners.command.reload:
+    default: op
+  snspawners.command.info:
+    default: op
+  # Лимиты стака по правам: snspawners.stack.<число>. Берётся максимальное найденное.
+  snspawners.stack.*:
+    description: Персональный лимит стака спавнеров
+    default: false

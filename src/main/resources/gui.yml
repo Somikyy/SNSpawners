@@ -1,0 +1,320 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  SNSpawners · Внешний вид меню
+#  Автор: Somikyy · t.me/somikyy · разработка плагинов и 3D-моделей
+# ─────────────────────────────────────────────────────────────────────────────
+#
+#  Любой предмет описывается одинаково:
+#    slot        — номер слота (с нуля). Можно список: [10, 11, 12]
+#    material    — материал. Если не указан у иконки спавнера — берётся из типа
+#    amount      — количество (по умолчанию 1)
+#    name        — отображаемое имя (HEX и градиенты работают)
+#    lore        — список строк описания
+#    model-data  — CustomModelData для ресурспака
+#    glow        — true, чтобы предмет «светился» без видимых зачарований
+#    hide-flags  — true, чтобы скрыть служебные подписи (по умолчанию true)
+#
+#  Чтобы убрать предмет из меню — поставь ему enabled: false.
+#
+#  ПЛЕЙСХОЛДЕРЫ, доступные во всех меню:
+#    %type%              имя типа спавнера
+#    %stack%             размер стака
+#    %owner%             ник владельца
+#    %level%  %max_level%
+#    %speed%  %fortune%          текущие бонусы уровня
+#    %next_speed% %next_fortune% %next_storage%   бонусы следующего уровня
+#    %upgrade_cost%      цена следующего уровня
+#    %storage% %storage_max% %storage_percent%    склад
+#    %storage_bar%       полоска заполнения склада
+#    %value%             стоимость склада по ценам продажи
+#    %xp%                накопленный опыт
+#    %rate%              предметов в час (оценка)
+#    %balance%           баланс игрока
+#    %autosell%          вкл/выкл
+#    %link%              координаты привязанного контейнера или «нет»
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Тексты для булевых плейсхолдеров
+placeholders:
+  enabled: "<#5AFF8A>включена"
+  disabled: "<#FF5C5C>выключена"
+  none: "<#5A5A5A>не привязан"
+  # Полоска %storage_bar%: 20 символов
+  bar-filled: "<#5AFF8A>|"
+  bar-empty: "<#2A2A2A>|"
+  bar-length: 20
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+#  ГЛАВНОЕ МЕНЮ СПАВНЕРА
+# ═════════════════════════════════════════════════════════════════════════════
+spawner-menu:
+  title: "<#1A1A1A>Спавнер <#3A3A3A>· <#7B2FFF>%type% <#3A3A3A>×%stack%"
+  rows: 5
+
+  filler:
+    enabled: true
+    material: GRAY_STAINED_GLASS_PANE
+    name: " "
+
+  items:
+
+    info:
+      enabled: true
+      slot: 13
+      # material не указан — берётся icon из spawners.yml
+      #
+      # %type% уже раскрашен в spawners.yml, второй градиент поверх не нужен.
+      # Нужен жирный шрифт — добавь &l внутрь display в spawners.yml:
+      #   display: "<gradient:#D9D9D9:#8E8E8E>&lСкелет</gradient>"
+      name: "%type%"
+      lore:
+        - ""
+        - " <#5A5A5A>Владелец <#3A3A3A>· <#B8B8B8>%owner%"
+        - " <#5A5A5A>Стак <#3A3A3A>· <#FFD75E>%stack% шт."
+        - " <#5A5A5A>Уровень <#3A3A3A>· <#B8B8B8>%level%<#3A3A3A>/<#5A5A5A>%max_level%"
+        - ""
+        - " <#5A5A5A>Скорость <#3A3A3A>· <#5AFF8A>×%speed%"
+        - " <#5A5A5A>Удача <#3A3A3A>· <#5AFF8A>+%fortune%%"
+        - " <#5A5A5A>Выход <#3A3A3A>· <#B8B8B8>~%rate% <#5A5A5A>предм./час"
+        - ""
+        - " <#5A5A5A>Склад <#3A3A3A>· <#B8B8B8>%storage%<#3A3A3A>/<#5A5A5A>%storage_max% <#3A3A3A>(%storage_percent%%)"
+        - " %storage_bar%"
+        - ""
+        - " <#5A5A5A>Мобы не спавнятся — лут считается напрямую."
+        - " <#5A5A5A>Ноль сущностей, ноль нагрузки на сервер."
+
+    collect:
+      enabled: true
+      slot: 29
+      material: HOPPER
+      name: "<#5AFF8A>&lЗабрать всё"
+      lore:
+        - ""
+        - " <#5A5A5A>На складе <#B8B8B8>%storage% <#5A5A5A>предметов"
+        - " <#5A5A5A>Опыт <#3A3A3A>· <#7BE87B>%xp%"
+        - ""
+        - " <#7B2FFF>▸ <#B8B8B8>ЛКМ <#5A5A5A>— забрать в инвентарь"
+
+    storage:
+      enabled: true
+      slot: 31
+      material: CHEST
+      name: "<#00E1FF>&lСклад"
+      lore:
+        - ""
+        - " <#5A5A5A>Посмотреть содержимое и забрать"
+        - " <#5A5A5A>отдельные предметы."
+        - ""
+        - " <#5A5A5A>Заполнено <#3A3A3A>· <#B8B8B8>%storage_percent%%"
+        - ""
+        - " <#7B2FFF>▸ <#B8B8B8>ЛКМ <#5A5A5A>— открыть"
+
+    sell:
+      enabled: true
+      slot: 33
+      material: SUNFLOWER
+      name: "<#FFD75E>&lПродать всё"
+      lore:
+        - ""
+        - " <#5A5A5A>Стоимость склада <#3A3A3A>· <#FFD75E>%value%"
+        - " <#5A5A5A>Твой баланс <#3A3A3A>· <#B8B8B8>%balance%"
+        - ""
+        - " <#7B2FFF>▸ <#B8B8B8>ЛКМ <#5A5A5A>— продать содержимое"
+
+    upgrade:
+      enabled: true
+      slot: 39
+      material: ANVIL
+      name: "<#B14AFF>&lУлучшения"
+      lore:
+        - ""
+        - " <#5A5A5A>Текущий уровень <#3A3A3A>· <#B8B8B8>%level%<#3A3A3A>/<#5A5A5A>%max_level%"
+        - " <#5A5A5A>Следующий <#3A3A3A>· <#FFD75E>%upgrade_cost%"
+        - ""
+        - " <#7B2FFF>▸ <#B8B8B8>ЛКМ <#5A5A5A>— открыть меню улучшений"
+
+    autosell-on:
+      enabled: true
+      slot: 41
+      material: GOLD_INGOT
+      glow: true
+      name: "<#5AFF8A>&lАвтопродажа: ВКЛ"
+      lore:
+        - ""
+        - " <#5A5A5A>Лут сразу превращается в деньги,"
+        - " <#5A5A5A>минуя склад."
+        - ""
+        - " <#7B2FFF>▸ <#B8B8B8>ЛКМ <#5A5A5A>— выключить"
+
+    autosell-off:
+      enabled: true
+      slot: 41
+      material: IRON_NUGGET
+      name: "<#5A5A5A>&lАвтопродажа: ВЫКЛ"
+      lore:
+        - ""
+        - " <#5A5A5A>Лут копится на складе."
+        - ""
+        - " <#7B2FFF>▸ <#B8B8B8>ЛКМ <#5A5A5A>— включить"
+
+    link:
+      enabled: true
+      slot: 40
+      material: CHAIN
+      name: "<#00E1FF>&lПривязка контейнера"
+      lore:
+        - ""
+        - " <#5A5A5A>Контейнер <#3A3A3A>· %link%"
+        - ""
+        - " <#5A5A5A>Лут будет автоматически перекладываться"
+        - " <#5A5A5A>в привязанный сундук."
+        - ""
+        - " <#7B2FFF>▸ <#B8B8B8>ЛКМ <#5A5A5A>— выбрать контейнер"
+        - " <#7B2FFF>▸ <#B8B8B8>ПКМ <#5A5A5A>— снять привязку"
+
+    close:
+      enabled: true
+      slot: 44
+      material: BARRIER
+      name: "<#FF5C5C>Закрыть"
+      lore: [ ]
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+#  МЕНЮ СКЛАДА
+# ═════════════════════════════════════════════════════════════════════════════
+storage-menu:
+  title: "<#1A1A1A>Склад <#3A3A3A>· %type% <#3A3A3A>· стр. %page%/%pages%"
+  rows: 6
+
+  # Сколько слотов верхней части отдано под предметы (остальное — навигация)
+  content-rows: 5
+
+  filler:
+    enabled: true
+    material: GRAY_STAINED_GLASS_PANE
+    name: " "
+
+  # Описание, дописываемое к каждому предмету на складе
+  # %amount% %price% %total%
+  item-lore:
+    - ""
+    - " <#5A5A5A>Количество <#3A3A3A>· <#B8B8B8>%amount%"
+    - " <#5A5A5A>Цена за шт. <#3A3A3A>· <#FFD75E>%price%"
+    - " <#5A5A5A>Всего <#3A3A3A>· <#FFD75E>%total%"
+    - ""
+    - " <#7B2FFF>▸ <#B8B8B8>ЛКМ <#5A5A5A>— забрать стопку"
+    - " <#7B2FFF>▸ <#B8B8B8>Shift+ЛКМ <#5A5A5A>— забрать всё"
+    - " <#7B2FFF>▸ <#B8B8B8>ПКМ <#5A5A5A>— продать всё"
+
+  # То же описание, когда плагина экономики нет: без цен и без продажи.
+  # Если убрать эту секцию — будет использоваться item-lore.
+  item-lore-no-economy:
+    - ""
+    - " <#5A5A5A>Количество <#3A3A3A>· <#B8B8B8>%amount%"
+    - ""
+    - " <#7B2FFF>▸ <#B8B8B8>ЛКМ <#5A5A5A>— забрать стопку"
+    - " <#7B2FFF>▸ <#B8B8B8>Shift+ЛКМ <#5A5A5A>— забрать всё"
+
+  items:
+    previous:
+      enabled: true
+      slot: 48
+      material: ARROW
+      name: "<#B8B8B8>← Назад"
+      lore: [ ]
+
+    back:
+      enabled: true
+      slot: 49
+      material: BARRIER
+      name: "<#FF5C5C>К спавнеру"
+      lore: [ ]
+
+    next:
+      enabled: true
+      slot: 50
+      material: ARROW
+      name: "<#B8B8B8>Вперёд →"
+      lore: [ ]
+
+    empty:
+      enabled: true
+      slot: 22
+      material: LIGHT_GRAY_STAINED_GLASS_PANE
+      name: "<#5A5A5A>Склад пуст"
+      lore:
+        - ""
+        - " <#3A3A3A>Подожди, пока спавнер поработает."
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+#  МЕНЮ УЛУЧШЕНИЙ
+# ═════════════════════════════════════════════════════════════════════════════
+upgrade-menu:
+  title: "<#1A1A1A>Улучшения <#3A3A3A>· %type%"
+  rows: 5
+
+  # Слоты, по которым раскладываются уровни (по порядку)
+  level-slots: [ 10, 12, 14, 16, 20, 22, 24, 28, 30, 32 ]
+
+  filler:
+    enabled: true
+    material: GRAY_STAINED_GLASS_PANE
+    name: " "
+
+  # Шаблон для уровня. %lvl% %speed% %fortune% %storage% %cost%
+  level:
+    unlocked:
+      name: "<#5AFF8A>&lУровень %lvl% <#3A3A3A>· куплен"
+      glow: true
+      lore:
+        - ""
+        - " <#5A5A5A>Скорость <#3A3A3A>· <#5AFF8A>×%speed%"
+        - " <#5A5A5A>Удача <#3A3A3A>· <#5AFF8A>+%fortune%%"
+        - " <#5A5A5A>Склад <#3A3A3A>· <#5AFF8A>%storage%"
+        - ""
+        - " <#5AFF8A>✔ Уже открыт"
+
+    current:
+      name: "<#FFD75E>&lУровень %lvl% <#3A3A3A>· текущий"
+      glow: true
+      lore:
+        - ""
+        - " <#5A5A5A>Скорость <#3A3A3A>· <#FFD75E>×%speed%"
+        - " <#5A5A5A>Удача <#3A3A3A>· <#FFD75E>+%fortune%%"
+        - " <#5A5A5A>Склад <#3A3A3A>· <#FFD75E>%storage%"
+        - ""
+        - " <#FFD75E>◆ Активен сейчас"
+
+    available:
+      name: "<#00E1FF>&lУровень %lvl%"
+      lore:
+        - ""
+        - " <#5A5A5A>Скорость <#3A3A3A>· <#B8B8B8>×%speed%"
+        - " <#5A5A5A>Удача <#3A3A3A>· <#B8B8B8>+%fortune%%"
+        - " <#5A5A5A>Склад <#3A3A3A>· <#B8B8B8>%storage%"
+        - ""
+        - " <#5A5A5A>Цена <#3A3A3A>· <#FFD75E>%cost%"
+        - " <#5A5A5A>Баланс <#3A3A3A>· <#B8B8B8>%balance%"
+        - ""
+        - " <#7B2FFF>▸ <#B8B8B8>ЛКМ <#5A5A5A>— купить"
+
+    locked:
+      material: BARRIER
+      name: "<#5A5A5A>&lУровень %lvl% <#3A3A3A>· закрыт"
+      lore:
+        - ""
+        - " <#5A5A5A>Скорость <#3A3A3A>· <#3A3A3A>×%speed%"
+        - " <#5A5A5A>Удача <#3A3A3A>· <#3A3A3A>+%fortune%%"
+        - " <#5A5A5A>Склад <#3A3A3A>· <#3A3A3A>%storage%"
+        - ""
+        - " <#FF5C5C>✘ Сначала купи предыдущий уровень"
+
+  items:
+    back:
+      enabled: true
+      slot: 40
+      material: ARROW
+      name: "<#B8B8B8>← К спавнеру"
+      lore: [ ]

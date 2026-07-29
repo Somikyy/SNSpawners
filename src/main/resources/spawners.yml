@@ -1,0 +1,414 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  SNSpawners · Типы спавнеров, таблицы лута и уровни улучшений
+#  Автор: Somikyy · t.me/somikyy · разработка плагинов и 3D-моделей
+# ─────────────────────────────────────────────────────────────────────────────
+#
+#  ТИП СПАВНЕРА
+#    display     — имя в GUI, голограмме и сообщениях (HEX/градиенты работают)
+#    icon        — материал иконки в GUI
+#    period      — секунд между циклами производства для ОДНОГО спавнера
+#    per-cycle   — сколько мобов «спавнится» за цикл на один спавнер
+#    xp          — [min, max] опыта с одного моба
+#    price       — цена одного спавнера этого типа (для /snsp give и магазинов)
+#    enabled     — false полностью отключает тип
+#
+#  ЗАПИСЬ ЛУТА (loot.<любой_id>)
+#    item        — материал предмета
+#    amount      — [min, max] штук при выпадении
+#    chance      — вероятность выпадения с одного моба (0.0–1.0)
+#    price       — цена за 1 штуку при продаже (нужен Vault)
+#    name        — (опц.) кастомное имя предмета
+#    lore        — (опц.) кастомное описание
+#    model-data  — (опц.) CustomModelData для ресурспака
+#    enchants    — (опц.) список 'ЗАЧАРОВАНИЕ:уровень'
+#    affected-by-fortune — (опц., по умолчанию true) растёт ли от улучшения
+#
+#  Формула производства за проход:
+#    мобов = циклы × стак × per-cycle
+#    штук  = Σ( биномиальное(мобов, chance) × равномерное(amount) ) × (1 + fortune)
+#  Стоимость расчёта не зависит от размера стака.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Уровни улучшения общие для всех типов.
+#   cost     — цена перехода НА этот уровень (Vault)
+#   speed    — множитель скорости (2.0 = вдвое быстрее)
+#   storage  — вместимость виртуального склада в штуках предметов
+#   fortune  — прибавка к количеству лута (0.25 = +25%)
+#   material — иконка уровня в меню улучшений
+upgrades:
+  1:
+    cost: 0
+    speed: 1.0
+    storage: 20000
+    fortune: 0.0
+    material: IRON_NUGGET
+  2:
+    cost: 25000
+    speed: 1.25
+    storage: 60000
+    fortune: 0.10
+    material: IRON_INGOT
+  3:
+    cost: 120000
+    speed: 1.60
+    storage: 180000
+    fortune: 0.25
+    material: GOLD_INGOT
+  4:
+    cost: 500000
+    speed: 2.10
+    storage: 500000
+    fortune: 0.50
+    material: DIAMOND
+  5:
+    cost: 2000000
+    speed: 3.00
+    storage: 2000000
+    fortune: 1.00
+    material: NETHERITE_INGOT
+
+
+types:
+
+  ZOMBIE:
+    enabled: true
+    display: "<gradient:#5AAE5A:#2F7A2F>Зомби</gradient>"
+    icon: ZOMBIE_SPAWN_EGG
+    period: 20
+    per-cycle: 4
+    xp: [ 5, 5 ]
+    price: 15000
+    loot:
+      flesh:
+        item: ROTTEN_FLESH
+        amount: [ 0, 2 ]
+        chance: 1.0
+        price: 0.4
+      iron:
+        item: IRON_INGOT
+        amount: [ 1, 1 ]
+        chance: 0.025
+        price: 14.0
+      carrot:
+        item: CARROT
+        amount: [ 1, 1 ]
+        chance: 0.025
+        price: 3.0
+      potato:
+        item: POTATO
+        amount: [ 1, 1 ]
+        chance: 0.025
+        price: 3.0
+
+  SKELETON:
+    enabled: true
+    display: "<gradient:#D9D9D9:#8E8E8E>Скелет</gradient>"
+    icon: SKELETON_SPAWN_EGG
+    period: 20
+    per-cycle: 4
+    xp: [ 5, 5 ]
+    price: 18000
+    loot:
+      bone:
+        item: BONE
+        amount: [ 0, 2 ]
+        chance: 1.0
+        price: 1.2
+      arrow:
+        item: ARROW
+        amount: [ 0, 2 ]
+        chance: 1.0
+        price: 0.8
+      bow:
+        item: BOW
+        amount: [ 1, 1 ]
+        chance: 0.0085
+        price: 45.0
+        affected-by-fortune: false
+
+  SPIDER:
+    enabled: true
+    display: "<gradient:#8B4A3B:#5A2E24>Паук</gradient>"
+    icon: SPIDER_SPAWN_EGG
+    period: 20
+    per-cycle: 4
+    xp: [ 5, 5 ]
+    price: 16000
+    loot:
+      string:
+        item: STRING
+        amount: [ 0, 2 ]
+        chance: 1.0
+        price: 1.5
+      eye:
+        item: SPIDER_EYE
+        amount: [ 1, 1 ]
+        chance: 0.33
+        price: 4.0
+
+  CAVE_SPIDER:
+    enabled: true
+    display: "<gradient:#3BA6A6:#1F6B6B>Пещерный паук</gradient>"
+    icon: CAVE_SPIDER_SPAWN_EGG
+    period: 18
+    per-cycle: 4
+    xp: [ 5, 5 ]
+    price: 26000
+    loot:
+      string:
+        item: STRING
+        amount: [ 0, 2 ]
+        chance: 1.0
+        price: 1.5
+      eye:
+        item: SPIDER_EYE
+        amount: [ 1, 1 ]
+        chance: 0.40
+        price: 4.0
+
+  CREEPER:
+    enabled: true
+    display: "<gradient:#6BE86B:#2FA82F>Крипер</gradient>"
+    icon: CREEPER_SPAWN_EGG
+    period: 22
+    per-cycle: 4
+    xp: [ 5, 5 ]
+    price: 30000
+    loot:
+      gunpowder:
+        item: GUNPOWDER
+        amount: [ 0, 2 ]
+        chance: 1.0
+        price: 6.0
+
+  ENDERMAN:
+    enabled: true
+    display: "<gradient:#B14AFF:#5E1F8C>Странник Края</gradient>"
+    icon: ENDERMAN_SPAWN_EGG
+    period: 25
+    per-cycle: 3
+    xp: [ 5, 5 ]
+    price: 120000
+    loot:
+      pearl:
+        item: ENDER_PEARL
+        amount: [ 0, 1 ]
+        chance: 0.5
+        price: 55.0
+
+  BLAZE:
+    enabled: true
+    display: "<gradient:#FFD75E:#FF7A00>Ифрит</gradient>"
+    icon: BLAZE_SPAWN_EGG
+    period: 25
+    per-cycle: 3
+    xp: [ 10, 10 ]
+    price: 150000
+    loot:
+      rod:
+        item: BLAZE_ROD
+        amount: [ 0, 1 ]
+        chance: 0.5
+        price: 70.0
+
+  WITHER_SKELETON:
+    enabled: true
+    display: "<gradient:#4A4A4A:#141414>Скелет-иссушитель</gradient>"
+    icon: WITHER_SKELETON_SPAWN_EGG
+    period: 30
+    per-cycle: 2
+    xp: [ 5, 5 ]
+    price: 400000
+    loot:
+      coal:
+        item: COAL
+        amount: [ 0, 1 ]
+        chance: 1.0
+        price: 5.0
+      bone:
+        item: BONE
+        amount: [ 0, 2 ]
+        chance: 1.0
+        price: 1.2
+      skull:
+        item: WITHER_SKELETON_SKULL
+        amount: [ 1, 1 ]
+        chance: 0.025
+        price: 900.0
+        affected-by-fortune: false
+
+  IRON_GOLEM:
+    enabled: true
+    display: "<gradient:#E8E8E8:#9AA8B5>Железный голем</gradient>"
+    icon: IRON_GOLEM_SPAWN_EGG
+    period: 35
+    per-cycle: 1
+    xp: [ 0, 0 ]
+    price: 750000
+    loot:
+      iron:
+        item: IRON_INGOT
+        amount: [ 3, 5 ]
+        chance: 1.0
+        price: 14.0
+      poppy:
+        item: POPPY
+        amount: [ 0, 2 ]
+        chance: 1.0
+        price: 0.5
+
+  WITCH:
+    enabled: true
+    display: "<gradient:#9B5FD1:#4A2266>Ведьма</gradient>"
+    icon: WITCH_SPAWN_EGG
+    period: 28
+    per-cycle: 2
+    xp: [ 5, 5 ]
+    price: 260000
+    loot:
+      redstone:
+        item: REDSTONE
+        amount: [ 0, 4 ]
+        chance: 0.25
+        price: 3.0
+      glowstone:
+        item: GLOWSTONE_DUST
+        amount: [ 0, 4 ]
+        chance: 0.25
+        price: 4.0
+      sugar:
+        item: SUGAR
+        amount: [ 0, 4 ]
+        chance: 0.25
+        price: 1.0
+      bottle:
+        item: GLASS_BOTTLE
+        amount: [ 0, 4 ]
+        chance: 0.25
+        price: 2.0
+      gunpowder:
+        item: GUNPOWDER
+        amount: [ 0, 4 ]
+        chance: 0.25
+        price: 6.0
+
+  PIGLIN:
+    enabled: true
+    display: "<gradient:#F2A6A6:#B55C5C>Пиглин</gradient>"
+    icon: PIGLIN_SPAWN_EGG
+    period: 26
+    per-cycle: 3
+    xp: [ 5, 5 ]
+    price: 200000
+    loot:
+      gold_nugget:
+        item: GOLD_NUGGET
+        amount: [ 2, 8 ]
+        chance: 1.0
+        price: 2.5
+      gold_ingot:
+        item: GOLD_INGOT
+        amount: [ 1, 1 ]
+        chance: 0.05
+        price: 22.0
+
+  GUARDIAN:
+    enabled: true
+    display: "<gradient:#4FD1C5:#1F7A72>Страж</gradient>"
+    icon: GUARDIAN_SPAWN_EGG
+    period: 30
+    per-cycle: 2
+    xp: [ 10, 10 ]
+    price: 320000
+    loot:
+      shard:
+        item: PRISMARINE_SHARD
+        amount: [ 0, 2 ]
+        chance: 1.0
+        price: 12.0
+      crystal:
+        item: PRISMARINE_CRYSTALS
+        amount: [ 0, 1 ]
+        chance: 0.4
+        price: 25.0
+      cod:
+        item: COD
+        amount: [ 1, 1 ]
+        chance: 0.25
+        price: 3.0
+
+  SLIME:
+    enabled: true
+    display: "<gradient:#7BE87B:#3AA13A>Слизень</gradient>"
+    icon: SLIME_SPAWN_EGG
+    period: 22
+    per-cycle: 4
+    xp: [ 4, 4 ]
+    price: 90000
+    loot:
+      slimeball:
+        item: SLIME_BALL
+        amount: [ 0, 2 ]
+        chance: 1.0
+        price: 8.0
+
+  MAGMA_CUBE:
+    enabled: true
+    display: "<gradient:#FF8A3D:#A83A00>Магмовый куб</gradient>"
+    icon: MAGMA_CUBE_SPAWN_EGG
+    period: 24
+    per-cycle: 3
+    xp: [ 4, 4 ]
+    price: 110000
+    loot:
+      cream:
+        item: MAGMA_CREAM
+        amount: [ 0, 1 ]
+        chance: 1.0
+        price: 18.0
+
+  PILLAGER:
+    enabled: true
+    display: "<gradient:#8FA3B0:#4A5A66>Разбойник</gradient>"
+    icon: PILLAGER_SPAWN_EGG
+    period: 30
+    per-cycle: 2
+    xp: [ 5, 5 ]
+    price: 280000
+    loot:
+      arrow:
+        item: ARROW
+        amount: [ 0, 3 ]
+        chance: 1.0
+        price: 0.8
+      crossbow:
+        item: CROSSBOW
+        amount: [ 1, 1 ]
+        chance: 0.085
+        price: 60.0
+        affected-by-fortune: false
+      emerald:
+        item: EMERALD
+        amount: [ 1, 1 ]
+        chance: 0.05
+        price: 40.0
+
+  COW:
+    enabled: true
+    display: "<gradient:#A97142:#6B4526>Корова</gradient>"
+    icon: COW_SPAWN_EGG
+    period: 20
+    per-cycle: 4
+    xp: [ 1, 3 ]
+    price: 8000
+    loot:
+      beef:
+        item: BEEF
+        amount: [ 1, 3 ]
+        chance: 1.0
+        price: 2.0
+      leather:
+        item: LEATHER
+        amount: [ 0, 2 ]
+        chance: 1.0
+        price: 3.5
