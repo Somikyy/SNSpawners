@@ -63,6 +63,7 @@ public final class SNSpawners extends JavaPlugin {
     private BukkitTask sweepHandle;
     private BukkitTask saveHandle;
     private BukkitTask depositHandle;
+    private BukkitTask lookHandle;
 
     /** Игроки в режиме выбора контейнера: игрок → позиция спавнера. */
     private final Map<UUID, BlockPos> pendingLinks = new HashMap<>();
@@ -111,7 +112,8 @@ public final class SNSpawners extends JavaPlugin {
             if (orphans > 0) {
                 getLogger().info("Удалено голограмм без спавнера: " + orphans + '.');
             }
-            getLogger().info("SNSpawners запущен: типов — " + types.size()
+            getLogger().info("SNSpawners " + getPluginMeta().getVersion()
+                    + " запущен: типов — " + types.size()
                     + ", спавнеров в памяти — " + manager.loadedCount()
                     + ", экономика — " + economy.status() + '.');
         });
@@ -200,6 +202,10 @@ public final class SNSpawners extends JavaPlugin {
                     .runTaskTimer(this, () -> actions.flushDeposits(),
                             config.depositIntervalTicks, config.depositIntervalTicks);
         }
+        if (config.hologramsEnabled && config.hologramMode == Config.HologramMode.LOOK) {
+            this.lookHandle = getServer().getScheduler()
+                    .runTaskTimer(this, () -> holograms.tickLook(), 40L, 2L);
+        }
     }
 
     private void cancelTasks() {
@@ -214,6 +220,10 @@ public final class SNSpawners extends JavaPlugin {
         if (depositHandle != null) {
             depositHandle.cancel();
             depositHandle = null;
+        }
+        if (lookHandle != null) {
+            lookHandle.cancel();
+            lookHandle = null;
         }
     }
 
@@ -297,6 +307,7 @@ public final class SNSpawners extends JavaPlugin {
 
     public void forgetPlayer(UUID player) {
         pendingLinks.remove(player);
+        holograms.forget(player);
     }
 
     public void playSound(Player player, String key) {

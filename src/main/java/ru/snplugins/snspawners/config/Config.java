@@ -36,6 +36,14 @@ public final class Config {
         REPLACE
     }
 
+    /** Режим показа голограмм. */
+    public enum HologramMode {
+        /** Видны всем и всегда — в пределах {@code view-range}. */
+        ALWAYS,
+        /** Игрок видит только голограмму спавнера, на который смотрит. */
+        LOOK
+    }
+
     public final boolean updateCheck;
     public final boolean debug;
 
@@ -78,6 +86,8 @@ public final class Config {
     public final boolean mobInSpawner;
 
     public final boolean hologramsEnabled;
+    public final HologramMode hologramMode;
+    public final int hologramLookDistance;
     public final double hologramOffsetY;
     public final float hologramViewRange;
     public final int hologramUpdateInterval;
@@ -128,6 +138,8 @@ public final class Config {
         this.mobInSpawner = yml.getBoolean("visual.mob-in-spawner", false);
 
         this.hologramsEnabled = yml.getBoolean("holograms.enabled", true);
+        this.hologramMode = parseEnum(yml.getString("holograms.mode"), HologramMode.ALWAYS);
+        this.hologramLookDistance = Math.max(1, Math.min(32, yml.getInt("holograms.look-distance", 8)));
         this.hologramOffsetY = yml.getDouble("holograms.offset-y", 1.1d);
         // Display-сущности меряют дальность в единицах по 64 блока, а в конфиге
         // она задана в блоках — иначе администратору пришлось бы считать доли.

@@ -5,9 +5,12 @@ import net.kyori.adventure.text.JoinConfiguration;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
 import org.bukkit.persistence.PersistentDataType;
 import ru.snplugins.snspawners.SNSpawners;
@@ -20,7 +23,10 @@ import ru.snplugins.snspawners.util.Replacer;
 import ru.snplugins.snspawners.util.Text;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -46,6 +52,9 @@ import java.util.UUID;
 public final class Holograms {
 
     private final SNSpawners plugin;
+
+    /** Режим «по взгляду»: какую голограмму игрок видит сейчас. */
+    private final Map<UUID, UUID> focused = new HashMap<>();
 
     public Holograms(SNSpawners plugin) {
         this.plugin = plugin;
@@ -141,6 +150,15 @@ public final class Holograms {
         // Полная яркость: текст читается и в темноте, а клиенту не нужно
         // сэмплить освещение блока под каждой голограммой каждый кадр.
         display.setBrightness(new Display.Brightness(15, 15));
+
+        // В режиме «по взгляду» голограмма рождается невидимой для всех:
+        // скрытая сущность клиенту вообще не отправляется, и поле из сотни
+        // спавнеров стоит клиенту ноль текстовых сущностей, а не сто.
+        if (config.hologramMode == Config.HologramMode.LOOK) {
+            for (Player online : Bukkit.getOnlinePlayers()) {
+                online.hideEntity(plugin, display);
+            }
+        }
         display.getPersistentDataContainer().set(
                 plugin.keys().hologram, PersistentDataType.STRING, data.position().encode());
     }
@@ -215,6 +233,76 @@ public final class Holograms {
                 }
             }
         }
+        focused.clear();
+    }
+
+    // ── режим «по взгляду» ───────────────────────────────────────────────────
+
+    /**
+     * Показывает каждому игроку голограмму только того спавнера, на который
+     * он смотрит, и прячет предыдущую.
+     *
+     * <p>Вызывается раз в два тика. Рейтрейс на несколько блоков дешёвый, а
+     * вся остальная работа — две операции с картой; пакеты уходят только в
+     * момент, когда взгляд реально перешёл с одного спавнера на другой.
+     */
+    public void tickLook() {
+        Config config = plugin.config();
+        if (!config.hologramsEnabled || config.hologramMode != Config.HologramMode.LOOK) {
+            return;
+        }
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            Block target = player.getTargetBlockExact(config.hologramLookDistance);
+            SpawnerData data = target != null && target.getType() == Material.SPAWNER
+                    ? plugin.manager().at(target) : null;
+            UUID wanted = data == null ? null : data.hologramEntity();
+            UUID current = focused.get(player.getUniqueId());
+            if (Objects.equals(wanted, current)) {
+                continue;
+            }
+            if (current != null) {
+                Entity shown = Bukkit.getEntity(current);
+                if (shown != null) {
+                    player.hideEntity(plugin, shown);
+                }
+                focused.remove(player.getUniqueId());
+            }
+            if (wanted != null) {
+                Entity display = Bukkit.getEntity(wanted);
+                if (display instanceof TextDisplay text && text.isValid()) {
+                    player.showEntity(plugin, text);
+                    focused.put(player.getUniqueId(), wanted);
+                }
+            }
+        }
+    }
+
+    /**
+     * Прячет от вошедшего игрока все существующие голограммы.
+     *
+     * <p>Флаги видимости живут в сессии игрока, поэтому новому подключению
+     * все сущности видны по умолчанию — прячутся они одним проходом по
+     * загруженным спавнерам, дальше видимостью управляет {@link #tickLook()}.
+     */
+    public void hideAllFor(Player player) {
+        Config config = plugin.config();
+        if (!config.hologramsEnabled || config.hologramMode != Config.HologramMode.LOOK) {
+            return;
+        }
+        for (SpawnerData data : plugin.manager().loaded()) {
+            UUID id = data.hologramEntity();
+            if (id == null) {
+                continue;
+            }
+            Entity display = Bukkit.getEntity(id);
+            if (display != null) {
+                player.hideEntity(plugin, display);
+            }
+        }
+    }
+
+    public void forget(UUID player) {
+        focused.remove(player);
     }
 
     /**
