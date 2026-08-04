@@ -1,11 +1,14 @@
 package ru.snplugins.snspawners.data;
 
 import org.bukkit.Chunk;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.CreatureSpawner;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 import ru.snplugins.snspawners.SNSpawners;
 import ru.snplugins.snspawners.config.SpawnerType;
@@ -140,13 +143,62 @@ public final class SpawnerManager {
      * нулевой радиус активации, нулевой лимит мобов рядом и запредельная
      * задержка. Отмена {@code SpawnerSpawnEvent} — четвёртый рубеж на случай
      * плагинов, переписывающих состояние блока.
+     *
+     * <p>Нулевой радиус активации заодно выключает клиентскую анимацию:
+     * «неактивный» спавнер не сыплет частицами огня и дыма и не крутит модель
+     * в клетке. На поле из сотен спавнеров эта анимация — главный пожиратель
+     * FPS игроков, поэтому блок обязан быть неактивным и для клиента —
+     * см. {@link #isSuppressed} и {@link #syncViewers}.
+     *
+     * <p>Модель моба в клетке — отдельная статья расхода: клиент рисует её
+     * каждый кадр для каждого спавнера в поле зрения, даже неподвижную.
+     * По умолчанию тип моба в блок не пишется вовсе (клетка пустая, тип виден
+     * на голограмме) и возвращается конфигом {@code visual.mob-in-spawner}.
+     *
+     * <p>Задержка ставится в {@code Short.MAX_VALUE}, а не {@code Integer}:
+     * ваниль хранит её в NBT шортом, и большее значение превращалось бы при
+     * сохранении в −1 — «выбрать новую задержку и новый вид моба».
      */
     public void suppressVanilla(CreatureSpawner spawner, SpawnerType type) {
-        spawner.setSpawnedType(type.entityType);
+        spawner.setSpawnedType(plugin.config().mobInSpawner ? type.entityType : null);
         spawner.setRequiredPlayerRange(0);
         spawner.setMaxNearbyEntities(0);
         spawner.setSpawnCount(0);
-        spawner.setDelay(Integer.MAX_VALUE);
+        spawner.setDelay(Short.MAX_VALUE);
+    }
+
+    /**
+     * Блок всё ещё в подавленном виде?
+     *
+     * <p>Состояние блока переживает обновления плагина и чужие правки
+     * ({@code /data}, WorldEdit, другие плагины), поэтому при регистрации из
+     * чанка оно сверяется и при расхождении приводится к норме. Это же лечит
+     * спавнеры, поставленные старыми версиями плагина: у них радиус активации
+     * остался ванильным, и клетки сыпали частицами при приближении игрока.
+     */
+    private boolean isSuppressed(CreatureSpawner spawner, SpawnerType type) {
+        EntityType wanted = plugin.config().mobInSpawner ? type.entityType : null;
+        return spawner.getSpawnedType() == wanted
+                && spawner.getRequiredPlayerRange() == 0
+                && spawner.getMaxNearbyEntities() == 0
+                && spawner.getSpawnCount() == 0
+                && spawner.getDelay() == Short.MAX_VALUE;
+    }
+
+    /**
+     * Доносит состояние блока до клиентов, уже видящих чанк.
+     *
+     * <p>{@code BlockState.update} меняет только серверную сторону: сам блок
+     * остаётся тем же, пакет об изменении не рассылается, и клиент продолжает
+     * жить со старым NBT — с ванильным радиусом активации, а значит с
+     * частицами и вращающейся моделью. Тем, кто загрузит чанк позже, досылать
+     * ничего не нужно: им уйдёт уже исправленный тег вместе с чанком.
+     */
+    private void syncViewers(CreatureSpawner spawner) {
+        Location location = spawner.getLocation();
+        for (Player viewer : spawner.getChunk().getPlayersSeeingChunk()) {
+            viewer.sendBlockUpdate(location, spawner);
+        }
     }
 
     /**
@@ -164,6 +216,7 @@ public final class SpawnerManager {
         suppressVanilla(spawner, type);
         data.save(spawner.getPersistentDataContainer(), plugin.keys());
         spawner.update(true, false);
+        syncViewers(spawner);
 
         register(data);
         plugin.holograms().create(data);
@@ -223,6 +276,11 @@ public final class SpawnerManager {
                 continue;
             }
             register(data);
+            if (!isSuppressed(spawner, data.type())) {
+                suppressVanilla(spawner, data.type());
+                spawner.update(true, false);
+                syncViewers(spawner);
+            }
             // Голограмму создаёт обход: спавнить сущности прямо в обработчике
             // загрузки чанка нельзя — это рекурсивная загрузка соседей.
         }

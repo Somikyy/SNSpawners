@@ -138,6 +138,9 @@ public final class Holograms {
         display.setSeeThrough(false);
         display.setAlignment(TextDisplay.TextAlignment.CENTER);
         display.setBackgroundColor(org.bukkit.Color.fromARGB(0));
+        // Полная яркость: текст читается и в темноте, а клиенту не нужно
+        // сэмплить освещение блока под каждой голограммой каждый кадр.
+        display.setBrightness(new Display.Brightness(15, 15));
         display.getPersistentDataContainer().set(
                 plugin.keys().hologram, PersistentDataType.STRING, data.position().encode());
     }

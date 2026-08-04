@@ -62,6 +62,7 @@ public final class SNSpawners extends JavaPlugin {
     private SweepTask sweepTask;
     private BukkitTask sweepHandle;
     private BukkitTask saveHandle;
+    private BukkitTask depositHandle;
 
     /** Игроки в режиме выбора контейнера: игрок → позиция спавнера. */
     private final Map<UUID, BlockPos> pendingLinks = new HashMap<>();
@@ -124,6 +125,12 @@ public final class SNSpawners extends JavaPlugin {
     public void onDisable() {
         cancelTasks();
 
+        // Невыплаченная выручка зачисляется до того, как выключится Vault:
+        // softdepend гарантирует, что мы гаснем раньше экономики.
+        if (actions != null) {
+            actions.flushDeposits();
+        }
+
         // Меню держат ссылки на объекты, которые сейчас исчезнут.
         closeAllMenus();
 
@@ -146,6 +153,8 @@ public final class SNSpawners extends JavaPlugin {
     /** Полная перезагрузка: конфиги, типы, реестр спавнеров, задачи. */
     public void reload() {
         cancelTasks();
+        // Интервал зачисления мог измениться — очередь не должна зависнуть.
+        actions.flushDeposits();
         closeAllMenus();
         pendingLinks.clear();
         ownerNames.clear();
@@ -186,6 +195,11 @@ public final class SNSpawners extends JavaPlugin {
         this.saveHandle = getServer().getScheduler()
                 .runTaskTimer(this, () -> manager.persistBatch(config.maxSavesPerTick),
                         config.saveInterval, config.saveInterval);
+        if (config.depositIntervalTicks > 0) {
+            this.depositHandle = getServer().getScheduler()
+                    .runTaskTimer(this, () -> actions.flushDeposits(),
+                            config.depositIntervalTicks, config.depositIntervalTicks);
+        }
     }
 
     private void cancelTasks() {
@@ -196,6 +210,10 @@ public final class SNSpawners extends JavaPlugin {
         if (saveHandle != null) {
             saveHandle.cancel();
             saveHandle = null;
+        }
+        if (depositHandle != null) {
+            depositHandle.cancel();
+            depositHandle = null;
         }
     }
 
@@ -256,6 +274,9 @@ public final class SNSpawners extends JavaPlugin {
     // ── меню и привязка ──────────────────────────────────────────────────────
 
     public void openSpawnerMenu(Player player, SpawnerData data) {
+        // Досрочное зачисление очереди автопродажи: %balance% в меню должен
+        // показывать деньги, которые игрок уже заработал.
+        actions.settle(player.getUniqueId());
         new SpawnerMenu(this, player, data).open();
     }
 

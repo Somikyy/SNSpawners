@@ -71,6 +71,11 @@ public final class Config {
     public final boolean autoSellEnabled;
     public final double taxMultiplier;
     public final long notifyCooldownMillis;
+    /** Период зачисления накопленной выручки в экономику, в тиках. 0 — сразу. */
+    public final int depositIntervalTicks;
+
+    /** Рисовать ли модель моба внутри клетки спавнера (дорого для FPS клиента). */
+    public final boolean mobInSpawner;
 
     public final boolean hologramsEnabled;
     public final double hologramOffsetY;
@@ -118,6 +123,9 @@ public final class Config {
         this.autoSellEnabled = yml.getBoolean("storage.auto-sell.enabled", true);
         this.taxMultiplier = 1.0d - clamp01(yml.getDouble("storage.auto-sell.tax-percent", 0.0d) / 100.0d);
         this.notifyCooldownMillis = Math.max(0, yml.getInt("storage.auto-sell.notify-cooldown", 30)) * 1000L;
+        this.depositIntervalTicks = Math.max(0, yml.getInt("storage.auto-sell.deposit-interval", 10)) * 20;
+
+        this.mobInSpawner = yml.getBoolean("visual.mob-in-spawner", false);
 
         this.hologramsEnabled = yml.getBoolean("holograms.enabled", true);
         this.hologramOffsetY = yml.getDouble("holograms.offset-y", 1.1d);

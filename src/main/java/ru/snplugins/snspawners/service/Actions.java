@@ -1,7 +1,6 @@
 package ru.snplugins.snspawners.service;
 
 import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Block;
 import org.bukkit.block.Container;
 import org.bukkit.entity.Player;
@@ -16,13 +15,18 @@ import ru.snplugins.snspawners.util.Inventories;
 import ru.snplugins.snspawners.util.Numbers;
 import ru.snplugins.snspawners.util.Replacer;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /** Операции над спавнером: забрать, продать, улучшить, выгрузить. */
 public final class Actions {
 
     private final SNSpawners plugin;
+
+    /** Выручка автопродажи, ожидающая зачисления: владелец → сумма. */
+    private final Map<UUID, Double> pendingDeposits = new HashMap<>();
 
     public Actions(SNSpawners plugin) {
         this.plugin = plugin;
@@ -177,6 +181,7 @@ public final class Actions {
         }
 
         UpgradeLevel next = plugin.types().level(data.level() + 1);
+        settle(player.getUniqueId());
         double balance = plugin.economy().balance(player);
 
         if (balance < next.cost()) {
@@ -280,9 +285,61 @@ public final class Actions {
             return 0.0d;
         }
 
-        OfflinePlayer target = Bukkit.getOfflinePlayer(owner);
-        plugin.economy().deposit(target, money);
+        credit(owner, money);
         return money;
+    }
+
+    // ── зачисление выручки ───────────────────────────────────────────────────
+
+    /**
+     * Зачисляет выручку автопродажи.
+     *
+     * <p>Прямой депозит на каждый проход обхода — это сотни обращений к
+     * экономике в секунду на большой ферме: профиль сервера почти целиком
+     * состоял из них, потому что EssentialsX на каждое зачисление трогает
+     * данные игрока. Поэтому выручка копится в памяти и уходит в Vault одной
+     * операцией на владельца раз в {@code deposit-interval}.
+     */
+    private void credit(UUID owner, double money) {
+        if (plugin.config().depositIntervalTicks <= 0) {
+            plugin.economy().deposit(Bukkit.getOfflinePlayer(owner), money);
+            return;
+        }
+        pendingDeposits.merge(owner, money, Double::sum);
+    }
+
+    /**
+     * Зачисляет всё накопленное. Вызывается по расписанию и при выключении.
+     *
+     * @return скольким владельцам ушли деньги
+     */
+    public int flushDeposits() {
+        if (pendingDeposits.isEmpty()) {
+            return 0;
+        }
+        int flushed = 0;
+        for (Map.Entry<UUID, Double> entry : pendingDeposits.entrySet()) {
+            if (entry.getValue() > 0.0d
+                    && plugin.economy().deposit(Bukkit.getOfflinePlayer(entry.getKey()), entry.getValue())) {
+                flushed++;
+            }
+        }
+        pendingDeposits.clear();
+        return flushed;
+    }
+
+    /**
+     * Досрочно зачисляет накопленное одному игроку.
+     *
+     * <p>Вызывается перед чтением баланса: иначе игрок видит в меню деньги без
+     * ещё не зачисленной выручки и не может купить улучшение, на которое по
+     * голограмме уже заработал.
+     */
+    public void settle(UUID owner) {
+        Double pending = pendingDeposits.remove(owner);
+        if (pending != null && pending > 0.0d) {
+            plugin.economy().deposit(Bukkit.getOfflinePlayer(owner), pending);
+        }
     }
 
     private void unlink(SpawnerData data) {
