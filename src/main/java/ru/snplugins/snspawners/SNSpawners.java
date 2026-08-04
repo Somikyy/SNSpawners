@@ -62,6 +62,8 @@ public final class SNSpawners extends JavaPlugin {
     private SweepTask sweepTask;
     private BukkitTask sweepHandle;
     private BukkitTask saveHandle;
+    private BukkitTask depositHandle;
+    private BukkitTask lookHandle;
 
     /** Игроки в режиме выбора контейнера: игрок → позиция спавнера. */
     private final Map<UUID, BlockPos> pendingLinks = new HashMap<>();
@@ -110,7 +112,8 @@ public final class SNSpawners extends JavaPlugin {
             if (orphans > 0) {
                 getLogger().info("Удалено голограмм без спавнера: " + orphans + '.');
             }
-            getLogger().info("SNSpawners запущен: типов — " + types.size()
+            getLogger().info("SNSpawners " + getPluginMeta().getVersion()
+                    + " запущен: типов — " + types.size()
                     + ", спавнеров в памяти — " + manager.loadedCount()
                     + ", экономика — " + economy.status() + '.');
         });
@@ -123,6 +126,12 @@ public final class SNSpawners extends JavaPlugin {
     @Override
     public void onDisable() {
         cancelTasks();
+
+        // Невыплаченная выручка зачисляется до того, как выключится Vault:
+        // softdepend гарантирует, что мы гаснем раньше экономики.
+        if (actions != null) {
+            actions.flushDeposits();
+        }
 
         // Меню держат ссылки на объекты, которые сейчас исчезнут.
         closeAllMenus();
@@ -146,6 +155,8 @@ public final class SNSpawners extends JavaPlugin {
     /** Полная перезагрузка: конфиги, типы, реестр спавнеров, задачи. */
     public void reload() {
         cancelTasks();
+        // Интервал зачисления мог измениться — очередь не должна зависнуть.
+        actions.flushDeposits();
         closeAllMenus();
         pendingLinks.clear();
         ownerNames.clear();
@@ -186,6 +197,15 @@ public final class SNSpawners extends JavaPlugin {
         this.saveHandle = getServer().getScheduler()
                 .runTaskTimer(this, () -> manager.persistBatch(config.maxSavesPerTick),
                         config.saveInterval, config.saveInterval);
+        if (config.depositIntervalTicks > 0) {
+            this.depositHandle = getServer().getScheduler()
+                    .runTaskTimer(this, () -> actions.flushDeposits(),
+                            config.depositIntervalTicks, config.depositIntervalTicks);
+        }
+        if (config.hologramsEnabled && config.hologramMode == Config.HologramMode.LOOK) {
+            this.lookHandle = getServer().getScheduler()
+                    .runTaskTimer(this, () -> holograms.tickLook(), 40L, 2L);
+        }
     }
 
     private void cancelTasks() {
@@ -196,6 +216,14 @@ public final class SNSpawners extends JavaPlugin {
         if (saveHandle != null) {
             saveHandle.cancel();
             saveHandle = null;
+        }
+        if (depositHandle != null) {
+            depositHandle.cancel();
+            depositHandle = null;
+        }
+        if (lookHandle != null) {
+            lookHandle.cancel();
+            lookHandle = null;
         }
     }
 
@@ -256,6 +284,9 @@ public final class SNSpawners extends JavaPlugin {
     // ── меню и привязка ──────────────────────────────────────────────────────
 
     public void openSpawnerMenu(Player player, SpawnerData data) {
+        // Досрочное зачисление очереди автопродажи: %balance% в меню должен
+        // показывать деньги, которые игрок уже заработал.
+        actions.settle(player.getUniqueId());
         new SpawnerMenu(this, player, data).open();
     }
 
@@ -276,6 +307,7 @@ public final class SNSpawners extends JavaPlugin {
 
     public void forgetPlayer(UUID player) {
         pendingLinks.remove(player);
+        holograms.forget(player);
     }
 
     public void playSound(Player player, String key) {

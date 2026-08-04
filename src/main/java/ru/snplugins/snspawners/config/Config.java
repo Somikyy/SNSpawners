@@ -36,6 +36,14 @@ public final class Config {
         REPLACE
     }
 
+    /** Режим показа голограмм. */
+    public enum HologramMode {
+        /** Видны всем и всегда — в пределах {@code view-range}. */
+        ALWAYS,
+        /** Игрок видит только голограмму спавнера, на который смотрит. */
+        LOOK
+    }
+
     public final boolean updateCheck;
     public final boolean debug;
 
@@ -71,8 +79,15 @@ public final class Config {
     public final boolean autoSellEnabled;
     public final double taxMultiplier;
     public final long notifyCooldownMillis;
+    /** Период зачисления накопленной выручки в экономику, в тиках. 0 — сразу. */
+    public final int depositIntervalTicks;
+
+    /** Рисовать ли модель моба внутри клетки спавнера (дорого для FPS клиента). */
+    public final boolean mobInSpawner;
 
     public final boolean hologramsEnabled;
+    public final HologramMode hologramMode;
+    public final int hologramLookDistance;
     public final double hologramOffsetY;
     public final float hologramViewRange;
     public final int hologramUpdateInterval;
@@ -118,8 +133,13 @@ public final class Config {
         this.autoSellEnabled = yml.getBoolean("storage.auto-sell.enabled", true);
         this.taxMultiplier = 1.0d - clamp01(yml.getDouble("storage.auto-sell.tax-percent", 0.0d) / 100.0d);
         this.notifyCooldownMillis = Math.max(0, yml.getInt("storage.auto-sell.notify-cooldown", 30)) * 1000L;
+        this.depositIntervalTicks = Math.max(0, yml.getInt("storage.auto-sell.deposit-interval", 10)) * 20;
+
+        this.mobInSpawner = yml.getBoolean("visual.mob-in-spawner", false);
 
         this.hologramsEnabled = yml.getBoolean("holograms.enabled", true);
+        this.hologramMode = parseEnum(yml.getString("holograms.mode"), HologramMode.ALWAYS);
+        this.hologramLookDistance = Math.max(1, Math.min(32, yml.getInt("holograms.look-distance", 8)));
         this.hologramOffsetY = yml.getDouble("holograms.offset-y", 1.1d);
         // Display-сущности меряют дальность в единицах по 64 блока, а в конфиге
         // она задана в блоках — иначе администратору пришлось бы считать доли.

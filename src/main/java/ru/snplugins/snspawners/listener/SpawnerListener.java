@@ -376,6 +376,13 @@ public final class SpawnerListener implements Listener {
     }
 
     @EventHandler
+    public void onJoin(org.bukkit.event.player.PlayerJoinEvent event) {
+        // Режим голограмм «по взгляду»: новой сессии все сущности видны по
+        // умолчанию, поэтому существующие голограммы прячутся сразу.
+        plugin.holograms().hideAllFor(event.getPlayer());
+    }
+
+    @EventHandler
     public void onQuit(org.bukkit.event.player.PlayerQuitEvent event) {
         plugin.forgetPlayer(event.getPlayer().getUniqueId());
     }
